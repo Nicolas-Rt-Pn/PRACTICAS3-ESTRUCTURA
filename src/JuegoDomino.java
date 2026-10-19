@@ -33,7 +33,14 @@ public class JuegoDomino {
     }
 
     private void repartirFichasIniciales() {
-        
+        crearYMezclarFichas();
+        for(Jugador jugador : jugadores) {
+            for (int i = 0; i < nFichas; i++) {
+                Ficha entregada = pozo.peek();
+                pozo.pop();
+                jugador.recibirFicha(entregada);
+            }
+        }
     }
 
     public void jugar() {
