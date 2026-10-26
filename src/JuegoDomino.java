@@ -13,6 +13,18 @@ public class JuegoDomino {
     private int turno;
 
     public JuegoDomino (String nombresJugadores[], int nFichas) {
+        this.NFICHAS = nFichas;
+        this.NJUGADORES = nombresJugadores.length;
+        Jugador[] jugadores = new Jugador[nombresJugadores.length];
+        int pos = 0;
+        for (String n : nombresJugadores){
+            Jugador jugador = new Jugador(n);
+            jugadores[pos] =jugador;
+            pos++;
+        }
+        this.jugadores = jugadores;
+
+    }
         
     public JuegoDomino (String nombresJugadores[]) {
         this(nombresJugadores, 7);
@@ -35,7 +47,7 @@ public class JuegoDomino {
     private void repartirFichasIniciales() {
         crearYMezclarFichas();
         for(Jugador jugador : jugadores) {
-            for (int i = 0; i < nFichas; i++) {
+            for (int i = 0; i < this.NFICHAS; i++) {
                 Ficha entregada = pozo.peek();
                 pozo.pop();
                 jugador.recibirFicha(entregada);
@@ -101,14 +113,31 @@ public class JuegoDomino {
 
    
     public boolean jugarTurno(Jugador jugador) {
-       
+        return true;
     }
 
     public boolean intentarColocar(Ficha f) {
-        
+
+        int izq = f.getLadoA();
+        int derch = f.getLadoB();
+        int valor1 = cadena.getFirst().getLadoA();
+        int valor2 = cadena.getLast().getLadoB();
+        if(valor2!=derch && valor1!=izq) return false;
+        else if (valor2 == derch) {
+            if(valor1 == izq){
+                if(valor1<valor2){
+                    colocarEnIzquierda(f, valor1);
+                }
+
+            }
+            colocarEnDerecha(f, valor2);
+        }
+        colocarEnIzquierda(f, valor1);
+        return true;
     }
 
     public void colocarEnIzquierda(Ficha f, int valorExtremo) {
+
         
     }
 
