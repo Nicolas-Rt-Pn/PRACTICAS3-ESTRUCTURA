@@ -13,6 +13,7 @@ public class JuegoDomino {
     private int turno;
 
     public JuegoDomino (String nombresJugadores[], int nFichas) {
+        acabar y poner excepcion
         this.NFICHAS = nFichas;
         this.NJUGADORES = nombresJugadores.length;
         Jugador[] jugadores = new Jugador[nombresJugadores.length];
@@ -113,6 +114,7 @@ public class JuegoDomino {
 
    
     public boolean jugarTurno(Jugador jugador) {
+        acabar
         return true;
     }
 
@@ -137,12 +139,19 @@ public class JuegoDomino {
     }
 
     public void colocarEnIzquierda(Ficha f, int valorExtremo) {
-
-        
+        if(f.getLadoB()==valorExtremo) {
+            f.invertir();
+            cadena.addFirst(f);
+        }
+        cadena.addFirst(f);
     }
 
     public void colocarEnDerecha(Ficha f, int valorExtremo) {
-      
+        if(f.getLadoA()==valorExtremo) {
+            f.invertir();
+            cadena.addLast(f);
+        }
+        cadena.addLast(f);
     }
 
     public void mostrarCadena() {
