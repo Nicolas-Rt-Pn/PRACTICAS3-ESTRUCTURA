@@ -171,11 +171,11 @@ public class JuegoDomino {
     }
 
     public void mostrarCadena() {
-        StringBuilder sb = new StringBuilder("CADENA ACTUAL: ");
+        String resultado = "CADENA ACTUAL: ";
         for (Ficha f : cadena) {
-            sb.append(f.toString()).append(" ");
+            resultado += f + " ";
         }
-        System.out.println(sb.toString());
+        System.out.println(resultado);
     }
 
     public Jugador determinarGanador() {
