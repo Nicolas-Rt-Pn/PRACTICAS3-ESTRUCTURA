@@ -1,4 +1,3 @@
-
 import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -8,35 +7,41 @@ public class JuegoDomino {
     private final Stack<Ficha> pozo;
     private final Deque<Ficha> cadena;
     private final Jugador[] jugadores;
-    private final int NJUGADORES;
     private final int NFICHAS;
+    private final int NJUGADORES;
     private int turno;
 
-    public JuegoDomino (String nombresJugadores[], int nFichas) {
-        acabar y poner excepcion
+    public JuegoDomino(String nombresJugadores[], int nFichas) {
+        if (nombresJugadores == null || nombresJugadores.length < 2 || nombresJugadores.length > 4) {
+            throw new IllegalArgumentException("El número de jugadores debe estar entre 2 y 4.");
+        }
         this.NFICHAS = nFichas;
         this.NJUGADORES = nombresJugadores.length;
-        Jugador[] jugadores = new Jugador[nombresJugadores.length];
-        int pos = 0;
-        for (String n : nombresJugadores){
-            Jugador jugador = new Jugador(n);
-            jugadores[pos] =jugador;
-            pos++;
-        }
-        this.jugadores = jugadores;
+        this.pozo = new Stack<>();
+        this.cadena = new LinkedList<>();
 
+        Jugador[] jugadoresArray = new Jugador[this.NJUGADORES];
+        for (int i = 0; i < this.NJUGADORES; i++) {
+            jugadoresArray[i] = new Jugador(nombresJugadores[i]);
+        }
+        this.jugadores = jugadoresArray;
+        this.turno = 0;
     }
-        
-    public JuegoDomino (String nombresJugadores[]) {
+
+    public JuegoDomino(String nombresJugadores[]) {
         this(nombresJugadores, 7);
     }
 
-    public void prepararPartida () {
+    public void prepararPartida() {
+        pozo.clear();
+        cadena.clear();
         crearYMezclarFichas();
         repartirFichasIniciales();
-        turno=0;
+        turno = 0;
     }
+
     public void crearYMezclarFichas() {
+        pozo.clear();
         for (int i = 0; i <= 6; i++) {
             for (int j = i; j <= 6; j++) {
                 pozo.add(new Ficha(i, j));
@@ -46,110 +51,121 @@ public class JuegoDomino {
     }
 
     private void repartirFichasIniciales() {
-        crearYMezclarFichas();
-        for(Jugador jugador : jugadores) {
+        for (Jugador jugador : jugadores) {
             for (int i = 0; i < this.NFICHAS; i++) {
-                Ficha entregada = pozo.peek();
-                pozo.pop();
-                jugador.recibirFicha(entregada);
+                if (!pozo.isEmpty()) {
+                    jugador.recibirFicha(pozo.pop());
+                }
             }
         }
     }
 
     public void jugar() {
         System.out.println("--- ESTADO INICIAL ---");
-        for (int j=0; j<NJUGADORES; j++)
+        for (int j = 0; j < NJUGADORES; j++)
             System.out.println(jugadores[j]);
 
-        System.out.println("Fichas en pozo (durmientes): " + pozo.size());
+        System.out.println("Fichas en pozo: " + pozo.size());
         System.out.println("----------------------\n");
 
-        // Jugador 1 empieza colocando su primera ficha boca arriba
         Ficha primeraFicha = jugadores[turno].getFichas().poll();
         cadena.add(primeraFicha);
         System.out.println("\n--- TURNO DE " + jugadores[turno].getNombre().toUpperCase() + " ---");
-        System.out.println(jugadores[turno].getNombre() + " inicia la cadena con la ficha " + primeraFicha);
+        System.out.println(jugadores[turno].getNombre() + " inicia la cadena con " + primeraFicha);
         mostrarCadena();
 
-        this.turno = (this.turno+1)%this.NJUGADORES; //pasa al siguiente jugador
-        Jugador actual = this.jugadores[turno];
+        this.turno = (this.turno + 1) % this.NJUGADORES;
         int pasesConsecutivos = 0;
-
         boolean finJuego = false;
+
         while (!finJuego) {
+            Jugador actual = jugadores[turno];
             System.out.println("\n--- TURNO DE " + actual.getNombre().toUpperCase() + " ---");
             boolean colocoFicha = jugarTurno(actual);
 
             if (!actual.tieneFichas()) {
                 System.out.println("\n¡" + actual.getNombre() + " se ha quedado sin fichas!");
                 finJuego = true;
-            }
-            else {
-               if (colocoFicha) {
-                  pasesConsecutivos = 0;
-               } else {
-                   pasesConsecutivos++;
-                   System.out.println(actual.getNombre() + " NO ha podido colocar ninguna ficha y pasa.");
-                   if (pasesConsecutivos == 2) {
-                       System.out.println("\n¡Ambos jugadores han pasado consecutivamente! El juego está cerrado.");
-                       finJuego = true;
-                   }
-               }
+            } else {
+                if (colocoFicha) {
+                    pasesConsecutivos = 0;
+                } else {
+                    pasesConsecutivos++;
+                    System.out.println(actual.getNombre() + " pasa.");
+                    if (pasesConsecutivos >= NJUGADORES) {
+                        System.out.println("\n¡Juego bloqueado!");
+                        finJuego = true;
+                    }
+                }
             }
 
             mostrarCadena();
 
             if (!finJuego) {
-                // Cambiar turno
-                this.turno= (this.turno+1)%NJUGADORES;
-                actual = this.jugadores[turno];
+                this.turno = (this.turno + 1) % NJUGADORES;
             }
         }
         determinarGanador();
     }
 
-    public Jugador getJugadorActual(){
+    public Jugador getJugadorActual() {
         return jugadores[turno];
     }
 
-   
     public boolean jugarTurno(Jugador jugador) {
-        acabar
-        return true;
+        int izq = cadena.getFirst().getLadoA();
+        int der = cadena.getLast().getLadoB();
+
+        Ficha fichaMano = jugador.buscarFicha(izq, der);
+        if (fichaMano != null) {
+            return intentarColocar(fichaMano);
+        }
+
+        while (!pozo.isEmpty()) {
+            Ficha robada = pozo.pop();
+            if (robada.getLadoA() == izq || robada.getLadoA() == der ||
+                    robada.getLadoB() == izq || robada.getLadoB() == der) {
+                return intentarColocar(robada);
+            } else {
+                jugador.recibirFicha(robada);
+            }
+        }
+        return false;
     }
 
     public boolean intentarColocar(Ficha f) {
+        int izq = cadena.getFirst().getLadoA();
+        int der = cadena.getLast().getLadoB();
 
-        int izq = f.getLadoA();
-        int derch = f.getLadoB();
-        int valor1 = cadena.getFirst().getLadoA();
-        int valor2 = cadena.getLast().getLadoB();
-        if(valor2!=derch && valor1!=izq) return false;
-        else if (valor2 == derch) {
-            if(valor1 == izq){
-                if(valor1<valor2){
-                    colocarEnIzquierda(f, valor1);
-                }
+        boolean encajaIzq = (f.getLadoA() == izq || f.getLadoB() == izq);
+        boolean encajaDer = (f.getLadoA() == der || f.getLadoB() == der);
 
+        if (!encajaIzq && !encajaDer) return false;
+
+        if (encajaIzq && encajaDer) {
+            if (f.getPuntosTotales() <= 6) {
+                colocarEnIzquierda(f, izq);
+            } else {
+                colocarEnDerecha(f, der);
             }
-            colocarEnDerecha(f, valor2);
+        } else if (encajaIzq) {
+            colocarEnIzquierda(f, izq);
+        } else {
+            colocarEnDerecha(f, der);
         }
-        colocarEnIzquierda(f, valor1);
         return true;
     }
 
-    public void colocarEnIzquierda(Ficha f, int valorExtremo) {
-        if(f.getLadoB()==valorExtremo) {
-            f.invertir();
-            cadena.addFirst(f);
+    public void colocarEnIzquierda(Ficha f, int valor) {
+        if (f.getLadoB() != valor) {
+            f = f.invertir();
         }
         cadena.addFirst(f);
     }
 
-    public void colocarEnDerecha(Ficha f, int valorExtremo) {
-        if(f.getLadoA()==valorExtremo) {
-            f.invertir();
-            cadena.addLast(f);
+    public void colocarEnDerecha(Ficha f, int valor) {
+        if (f.getLadoA() != valor) {
+            f = f.invertir();
         }
         cadena.addLast(f);
     }
@@ -163,16 +179,47 @@ public class JuegoDomino {
     }
 
     public Jugador determinarGanador() {
-       
-        return null;
+        Jugador ganador = null;
+        int minPuntos = Integer.MAX_VALUE;
+        int minFichas = Integer.MAX_VALUE;
+        boolean empate = false;
+
+        for (Jugador j : jugadores) {
+            int puntos = j.calcularPuntosRestantes();
+            int numFichas = j.getFichas().size();
+
+            if (puntos < minPuntos) {
+                minPuntos = puntos;
+                minFichas = numFichas;
+                ganador = j;
+                empate = false;
+            } else if (puntos == minPuntos) {
+                if (numFichas < minFichas) {
+                    minFichas = numFichas;
+                    ganador = j;
+                    empate = false;
+                } else if (numFichas == minFichas) {
+                    empate = true;
+                }
+            }
+        }
+
+        if (empate) return null;
+        return ganador;
     }
 
     public Jugador[] getJugadores() {
         return this.jugadores;
     }
+
     public int fichasEnPozo() {
         return this.pozo.size();
     }
+
+    public Stack<Ficha> getPozo() {
+        return this.pozo;
+    }
+
     public Object[] getCadena() {
         return this.cadena.toArray();
     }
